@@ -1,6 +1,8 @@
 import hmac
 import sqlite3
 import datetime
+from flask_cors import CORS
+
 
 from flask import Flask, request, jsonify
 from flask_jwt import JWT, jwt_required, current_identity
@@ -26,7 +28,7 @@ def fetch_users():
     return new_data
 
 
-users = fetch_users()
+
 
 def init_user_table():
     conn = sqlite3.connect('blog.db')
@@ -52,9 +54,10 @@ def init_post_table():
 
 init_user_table()
 init_post_table()
+users = fetch_users()
 
-username_table = { u.username: u for u in users }
-userid_table = { u.id: u for u in users }
+username_table = {u.username: u for u in users}
+userid_table = {u.id: u for u in users}
 
 
 def authenticate(username, password):
@@ -69,22 +72,24 @@ def identity(payload):
 
 
 app = Flask(__name__)
+CORS(app)
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
 
 jwt = JWT(app, authenticate, identity)
+
 
 @app.route('/protected')
 @jwt_required()
 def protected():
     return '%s' % current_identity
 
+
 @app.route('/user-registration/', methods=["POST"])
 def user_registration():
     response = {}
 
     if request.method == "POST":
-
         first_name = request.form['first_name']
         last_name = request.form['last_name']
         username = request.form['username']
@@ -197,6 +202,6 @@ def get_post(post_id):
 
     return jsonify(response)
 
+
 if __name__ == '__main__':
     app.run()
-
